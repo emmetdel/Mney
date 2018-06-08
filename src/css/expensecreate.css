@@ -1,0 +1,12 @@
+.outer-container {
+  display: flex;
+  align-content: center;
+  justify-content: center;
+}
+
+.inner-container {
+  max-width: 400px;
+  width: 400px;
+  background-color: antiquewhite;
+  height: 100vh;
+}

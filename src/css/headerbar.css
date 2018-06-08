@@ -1,0 +1,36 @@
+header {
+  height: 50px;
+  width: 100%;
+  background-color: aqua;
+  display: flex;
+  justify-content: center;
+}
+
+header > section > h1 {
+  margin: 0;
+  padding: 0;
+  max-height: 36px;
+  line-height: 36px;
+}
+
+#header-actions {
+  height: 100%;
+  max-width: 400px;
+  width: 400px;
+  background-color: bisque;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}
+
+#budget-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#budget-container > p {
+  padding: 0;
+  margin: 0;
+}

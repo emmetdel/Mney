@@ -1,34 +1,127 @@
 import * as React from "react";
 
+import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
 import TextField from "@material-ui/core/TextField";
+
+import fire from "../fire";
+
+import { firestore } from "firebase";
 
 import "../css/expensecreate.css";
 
-class ExpenseCreate extends React.Component<{}, { expense: string }> {
-  constructor(props: any) {
-    super(props);
+const db = fire.firestore();
+db.settings({ timestampsInSnapshots: true });
+
+interface IExpenseState {
+  expenseDescription: string;
+  expenseAmount: number;
+  expenseList: firestore.QueryDocumentSnapshot[];
+}
+
+class ExpenseCreate extends React.Component<{}, IExpenseState> {
+  constructor() {
+    super({});
     this.state = {
-      expense: ""
+      expenseAmount: 0,
+      expenseDescription: "",
+      expenseList: []
     };
+    this.handleDescription = this.handleDescription.bind(this);
+    this.handleExpense = this.handleExpense.bind(this);
+    this.submitExpense = this.submitExpense.bind(this);
+    this.expenseList = this.expenseList.bind(this);
+
+    this.expenseList();
   }
 
-  public handleExpenseInput = (expense: string) => {
-    this.setState({ expense });
-  };
+  public expenseList() {
+    db.collection("Expenses")
+      .orderBy("DateAdded", "desc")
+      .onSnapshot(snap => {
+        const arr: firestore.QueryDocumentSnapshot[] = [];
+        snap.forEach(doc => {
+          arr.push(doc);
+        });
+        this.setState({ expenseList: arr });
+      });
+  }
+
+  public handleDescription(event: React.ChangeEvent<HTMLInputElement>): void {
+    const expenseDescription: string = event.target.value;
+    this.setState({ expenseDescription });
+  }
+
+  public handleExpense(event: React.ChangeEvent<HTMLInputElement>): void {
+    const expenseAmountStr: string = event.target.value;
+    const expenseAmount: number = parseInt(expenseAmountStr, 10);
+    this.setState({ expenseAmount });
+  }
+
+  public submitExpense() {
+    db.collection("Expenses").add({
+      DateAdded: Date.now(),
+      expenseAmount: this.state.expenseAmount,
+      expenseDescription: this.state.expenseDescription
+    });
+
+    this.setState({ expenseAmount: 0, expenseDescription: "" });
+    console.log(this.state);
+  }
 
   public render() {
     return (
       <section className="outer-container">
         <div className="inner-container">
-          <Card>
-            <TextField
-              id="name"
-              label="Name"
-              value={this.state.expense}
-              // onChange={this.handleExpenseInput(expense))}
-              margin="normal"
-            />
+          <Card style={{ padding: "15px" }}>
+            <div style={{ display: "flex", flexDirection: "row" }}>
+              <TextField
+                id="description"
+                label="Expense Description"
+                value={this.state.expenseDescription}
+                onChange={this.handleDescription}
+                margin="normal"
+                InputLabelProps={{
+                  shrink: true
+                }}
+                style={{ marginRight: "10px", flex: 4 }}
+              />
+              <TextField
+                id="expenseAmount"
+                label="Amount(€)"
+                value={this.state.expenseAmount}
+                onChange={this.handleExpense}
+                type="number"
+                InputLabelProps={{
+                  shrink: true
+                }}
+                placeholder="0"
+                margin="normal"
+                style={{ flex: 1 }}
+              />
+            </div>
+            <Button
+              style={{ border: "1px solid black", marginTop: "5px" }}
+              onClick={this.submitExpense}
+            >
+              Add Expense
+            </Button>
+          </Card>
+          <Card style={{ marginTop: "15px" }}>
+            <List>
+              {this.state.expenseList
+                ? this.state.expenseList.map((doc, index) => {
+                    return (
+                      <ListItem key={index}>
+                        <label>Amount: {doc.data().expenseAmount} - </label>
+                        Description: {doc.data().expenseDescription}
+                      </ListItem>
+                    );
+                  })
+                : null}
+            </List>
           </Card>
         </div>
       </section>

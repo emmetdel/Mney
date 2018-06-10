@@ -1,9 +1,20 @@
 {
-  "extends": ["tslint:recommended", "tslint-react", "tslint-config-prettier"],
+  "extends": [
+    "tslint:recommended",
+    "tslint-react",
+    "tslint-config-prettier"
+  ],
   "linterOptions": {
-    "exclude": ["config/**/*.js", "node_modules/**/*.ts"]
+    "exclude": [
+      "config/**/*.js",
+      "node_modules/**/*.ts"
+    ]
   },
   "rules": {
-    "no-console": false
+    "no-console": false,
+    "max-line-length": [
+      true,
+      200
+    ]
   }
 }

@@ -1,9 +1,10 @@
 header {
   height: 50px;
   width: 100%;
-  background-color: aqua;
+  /* background-color: aqua; */
   display: flex;
   justify-content: center;
+  /* border-bottom: 1px solid black; */
 }
 
 header > section > h1 {
@@ -17,11 +18,14 @@ header > section > h1 {
   height: 100%;
   max-width: 400px;
   width: 400px;
-  background-color: bisque;
+  /* background-color: bisque; */
   display: flex;
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
+  box-shadow: 0 4px 2px -2px gray;
+
+
 }
 
 #budget-container {

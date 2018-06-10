@@ -5,6 +5,7 @@ import Card from "@material-ui/core/Card";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import TextField from "@material-ui/core/TextField";
+import * as Spinner from "react-spinkit"
 
 import fire from "../fire";
 
@@ -19,6 +20,7 @@ interface IExpenseState {
   expenseDescription: string;
   expenseAmount: number;
   expenseList: firestore.QueryDocumentSnapshot[];
+  loading: boolean
 }
 
 class ExpenseCreate extends React.Component<{}, IExpenseState> {
@@ -27,7 +29,8 @@ class ExpenseCreate extends React.Component<{}, IExpenseState> {
     this.state = {
       expenseAmount: 0,
       expenseDescription: "",
-      expenseList: []
+      expenseList: [],
+      loading: true,
     };
     this.handleDescription = this.handleDescription.bind(this);
     this.handleExpense = this.handleExpense.bind(this);
@@ -41,11 +44,14 @@ class ExpenseCreate extends React.Component<{}, IExpenseState> {
     db.collection("Expenses")
       .orderBy("DateAdded", "desc")
       .onSnapshot(snap => {
+        this.setState({ loading: true });
         const arr: firestore.QueryDocumentSnapshot[] = [];
         snap.forEach(doc => {
           arr.push(doc);
         });
-        this.setState({ expenseList: arr });
+        if (arr.length > 0) {
+          this.setState({ expenseList: arr, loading: false });
+        }
       });
   }
 
@@ -109,10 +115,11 @@ class ExpenseCreate extends React.Component<{}, IExpenseState> {
               Add Expense
             </Button>
           </Card>
-          <Card style={{ marginTop: "15px" }}>
-            <List>
-              {this.state.expenseList
-                ? this.state.expenseList.map((doc, index) => {
+          {!this.state.loading ?
+            <Card style={{ marginTop: "15px" }}>
+              <List>
+                {this.state.expenseList
+                  ? this.state.expenseList.map((doc, index) => {
                     return (
                       <ListItem key={index}>
                         <label>Amount: {doc.data().expenseAmount} - </label>
@@ -120,9 +127,22 @@ class ExpenseCreate extends React.Component<{}, IExpenseState> {
                       </ListItem>
                     );
                   })
-                : null}
-            </List>
-          </Card>
+                  : null
+                }
+              </List>
+
+            </Card>
+            : <div
+              style={{
+                alignItems: 'center',
+                display: 'flex',
+                flexDirection: 'row',
+                height: '120px',
+                justifyContent: 'center',
+                width: '100%',
+              }}>
+              <Spinner fadeIn="none" color="black" />
+              <h3 style={{ marginLeft: '9.5px' }}>Loading...</h3></div>}
         </div>
       </section>
     );

@@ -2,8 +2,6 @@ import * as React from "react";
 
 import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
 import TextField from "@material-ui/core/TextField";
 import * as Spinner from "react-spinkit"
 
@@ -12,6 +10,8 @@ import fire from "../fire";
 import { firestore } from "firebase";
 
 import "../css/expensecreate.css";
+import ExpenseTable from "./ExpenseTable";
+import PaperCenter from "./PaperCenter";
 
 const db = fire.firestore();
 db.settings({ timestampsInSnapshots: true });
@@ -20,13 +20,18 @@ interface IExpenseState {
   expenseDescription: string;
   expenseAmount: number;
   expenseList: firestore.QueryDocumentSnapshot[];
-  loading: boolean
+  loading: boolean;
+  descriptionError: boolean;
+  amountError: boolean;
+
 }
 
 class ExpenseCreate extends React.Component<{}, IExpenseState> {
-  constructor() {
-    super({});
+  constructor(props: any) {
+    super(props);
     this.state = {
+      amountError: false,
+      descriptionError: false,
       expenseAmount: 0,
       expenseDescription: "",
       expenseList: [],
@@ -43,15 +48,15 @@ class ExpenseCreate extends React.Component<{}, IExpenseState> {
   public expenseList() {
     db.collection("Expenses")
       .orderBy("DateAdded", "desc")
-      .onSnapshot(snap => {
+      .get()
+      .then(snap => {
         this.setState({ loading: true });
         const arr: firestore.QueryDocumentSnapshot[] = [];
         snap.forEach(doc => {
           arr.push(doc);
         });
-        if (arr.length > 0) {
-          this.setState({ expenseList: arr, loading: false });
-        }
+        this.setState({ expenseList: arr, loading: false });
+
       });
   }
 
@@ -67,14 +72,31 @@ class ExpenseCreate extends React.Component<{}, IExpenseState> {
   }
 
   public submitExpense() {
-    db.collection("Expenses").add({
-      DateAdded: Date.now(),
-      expenseAmount: this.state.expenseAmount,
-      expenseDescription: this.state.expenseDescription
-    });
 
-    this.setState({ expenseAmount: 0, expenseDescription: "" });
-    console.log(this.state);
+    if (this.state.expenseDescription.length === 0) {
+      console.log('hit1')
+      this.setState({ descriptionError: true })
+    }
+    if (this.state.expenseAmount === 0) {
+      console.log('hit2')
+      this.setState({ amountError: true })
+    }
+    // console.log(this.state);
+    // console.log(this.state.expenseAmount);
+
+    // console.log(this.state.descriptionError);
+    // console.log(this.state.amountError);
+
+    if (!this.state.amountError && !this.state.descriptionError) {
+      db.collection("Expenses").add({
+        DateAdded: Date.now(),
+        expenseAmount: this.state.expenseAmount,
+        expenseDescription: this.state.expenseDescription
+      });
+      this.setState({ expenseAmount: 0, expenseDescription: "" });
+      this.expenseList();
+    }
+
   }
 
   public render() {
@@ -84,6 +106,7 @@ class ExpenseCreate extends React.Component<{}, IExpenseState> {
           <Card style={{ padding: "15px" }}>
             <div style={{ display: "flex", flexDirection: "row" }}>
               <TextField
+                error={this.state.descriptionError}
                 id="description"
                 label="Expense Description"
                 value={this.state.expenseDescription}
@@ -95,6 +118,7 @@ class ExpenseCreate extends React.Component<{}, IExpenseState> {
                 style={{ marginRight: "10px", flex: 4 }}
               />
               <TextField
+                error={this.state.amountError}
                 id="expenseAmount"
                 label="Amount(€)"
                 value={this.state.expenseAmount}
@@ -116,37 +140,17 @@ class ExpenseCreate extends React.Component<{}, IExpenseState> {
             </Button>
           </Card>
           {!this.state.loading ?
-            <Card style={{ marginTop: "15px" }}>
-              <List>
-                {this.state.expenseList
-                  ? this.state.expenseList.map((doc, index) => {
-                    return (
-                      <ListItem key={index}>
-                        <label>Amount: {doc.data().expenseAmount} - </label>
-                        Description: {doc.data().expenseDescription}
-                      </ListItem>
-                    );
-                  })
-                  : null
-                }
-              </List>
-
-            </Card>
-            : <div
-              style={{
-                alignItems: 'center',
-                display: 'flex',
-                flexDirection: 'row',
-                height: '120px',
-                justifyContent: 'center',
-                width: '100%',
-              }}>
+            <ExpenseTable expenses={this.state.expenseList} loading={this.state.loading} /> :
+            <PaperCenter>
               <Spinner fadeIn="none" color="black" />
-              <h3 style={{ marginLeft: '9.5px' }}>Loading...</h3></div>}
+              <h3 style={{ marginLeft: '9.5px' }}>Loading...</h3>
+            </PaperCenter>
+          }
         </div>
       </section>
     );
   }
 }
+
 
 export default ExpenseCreate;
